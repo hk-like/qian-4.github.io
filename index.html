@@ -1,302 +1,670 @@
-　<!doctype html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>逮捕状管理ポータル（デモ）</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Web Terminal — Linux風</title>
+<style>
+  :root{
+    --bg:#0b0f0c;
+    --panel:#071009;
+    --text:#c8f7c8;
+    --muted:#7fb077;
+    --accent:#6ee;
+    --prompt:#6ef;
+    --shadow: rgba(0,0,0,0.6);
+    --radius:10px;
+    --font-family: "SFMono-Regular", Menlo, Monaco, "Roboto Mono", "Noto Sans JP", monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background: linear-gradient(180deg,#04120b 0%, #081311 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:var(--font-family);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
 
-  <!-- IMPORTANT: 実運用では厳格な CSP をサーバー側で設定すること -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+  .terminal-wrap{
+    width: min(1100px, 96%);
+    height: min(720px, 92vh);
+    background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.12));
+    border-radius:var(--radius);
+    box-shadow: 0 10px 40px var(--shadow);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
 
-  <style>
-    /* 簡潔で読みやすいスタイル（実運用はデザインに合わせて） */
-    body { font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", Arial; background:#f4f6f8; margin:0; color:#111; }
-    header { background:#0b5; padding:18px; color:#012; display:flex; align-items:center; justify-content:space-between; }
-    h1 { margin:0; font-size:1.1rem; }
-    .container { padding:20px; max-width:1100px; margin:20px auto; }
-    .card { background:#fff; padding:16px; border-radius:8px; box-shadow:0 1px 4px rgba(10,10,10,0.06); margin-bottom:16px; }
-    .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-    input, select, button, textarea { font:inherit; padding:8px 10px; border-radius:6px; border:1px solid #ddd; }
-    table { width:100%; border-collapse:collapse; margin-top:12px; }
-    th, td { padding:10px; border-bottom:1px solid #eee; text-align:left; font-size:0.95rem; }
-    th { background:#fafafa; color:#333; }
-    .muted { color:#666; font-size:0.9rem; }
-    .btn { background:#0b5; color:#012; border:none; cursor:pointer; }
-    .btn.secondary { background:#eee; color:#111; }
-    .right { margin-left:auto; }
-    .modal { position:fixed; left:0; top:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); }
-    .modal .panel { width:700px; max-width:95%; background:#fff; border-radius:8px; padding:18px; }
-    .hidden { display:none; }
-    .tag { display:inline-block; padding:4px 8px; border-radius:12px; background:#eef; font-size:0.85rem; }
-    footer { text-align:center; color:#777; font-size:0.85rem; padding:12px; }
-  </style>
+  .header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 16px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+  .dots{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .dot{width:12px;height:12px;border-radius:50%}
+  .dot.red{background:#ff5f56}
+  .dot.yellow{background:#ffbd2e}
+  .dot.green{background:#27c93f}
+  .title{
+    margin-left:auto;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  .screen{
+    flex:1;
+    padding:18px;
+    overflow:auto;
+    background: linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.02));
+    backdrop-filter: blur(2px);
+  }
+
+  .line{
+    font-size:15px;
+    line-height:1.45;
+    white-space:pre-wrap;
+    word-break:break-word;
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+  }
+
+  .prompt{
+    min-width:8ch;
+    color:var(--prompt);
+    font-weight:600;
+    user-select:none;
+  }
+  .output{
+    flex:1;
+    color:var(--text);
+  }
+  .muted{color:var(--muted)}
+  .input{
+    display:inline-block;
+    outline:none;
+    border:none;
+    background:transparent;
+    color:var(--text);
+    font-family:inherit;
+    font-size:15px;
+    padding:0;
+    margin:0;
+    min-width:6ch;
+  }
+  .cursor{
+    display:inline-block;
+    width:8px;
+    height:18px;
+    background:var(--text);
+    margin-left:2px;
+    animation:blink 1s steps(2,start) infinite;
+    vertical-align:bottom;
+    border-radius:2px;
+  }
+  @keyframes blink{50%{opacity:0}}
+
+  .footer{
+    padding:10px 14px;
+    border-top:1px solid rgba(255,255,255,0.02);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .kbd{
+    background:rgba(255,255,255,0.03);
+    border-radius:6px;
+    padding:6px 8px;
+    font-family:inherit;
+    color:var(--text);
+    border:1px solid rgba(255,255,255,0.02);
+  }
+
+  /* small screens */
+  @media (max-width:480px){
+    .prompt{min-width:6ch;font-size:13px}
+    .line{font-size:14px}
+    .header{padding:10px}
+  }
+</style>
 </head>
 <body>
-  <header>
-    <h1>逮捕状管理ポータル（Demo）</h1>
-    <div class="muted">ログイン状態: <strong id="loginState">未認証</strong></div>
-  </header>
-
-  <main class="container">
-    <!-- 認証は必ずサーバー側で行うこと。フロント側のモックに過ぎない -->
-    <div class="card" id="loginCard">
-      <h2>職員ログイン（デモ）</h2>
-      <p class="muted">実運用ではID連携（例：SAML / OIDC）、多要素認証、ハードウェアトークンを必須にしてください。</p>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <input id="username" placeholder="職員ID" />
-        <input id="password" placeholder="パスワード" type="password" />
-        <button class="btn" id="loginBtn">ログイン</button>
-      </div>
+<div class="terminal-wrap" role="application" aria-label="Web terminal">
+  <div class="header">
+    <div class="dots">
+      <span class="dot red" aria-hidden></span>
+      <span class="dot yellow" aria-hidden></span>
+      <span class="dot green" aria-hidden></span>
     </div>
-
-    <div id="app" class="hidden">
-      <div class="card">
-        <div style="display:flex; align-items:center;">
-          <div>
-            <strong id="userName">職員: 山田一郎（例）</strong><br />
-            <span class="muted">権限: 管理者</span>
-          </div>
-          <div class="right">
-            <button class="btn secondary" id="logoutBtn">ログアウト</button>
-          </div>
-        </div>
-      </div>
-
-      <section class="card" aria-labelledby="warrantListTitle">
-        <h2 id="warrantListTitle">逮捕状一覧</h2>
-
-        <div class="toolbar">
-          <input id="search" placeholder="氏名・事案ID・発行日で検索" style="min-width:260px;" />
-          <select id="statusFilter">
-            <option value="">すべてのステータス</option>
-            <option value="issued">発行済</option>
-            <option value="executed">執行済</option>
-            <option value="cancelled">取消</option>
-          </select>
-          <button class="btn" id="newWarrantBtn">新規逮捕状作成</button>
-          <button class="btn secondary" id="exportBtn">CSVエクスポート</button>
-        </div>
-
-        <table id="warrantTable" aria-describedby="warrantListTitle">
-          <thead>
-            <tr>
-              <th>事案ID</th>
-              <th>氏名（仮名）</th>
-              <th>発行日</th>
-              <th>ステータス</th>
-              <th>担当</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </section>
-
-      <section class="card">
-        <h3>監査ログ（直近）</h3>
-        <ul id="auditLog" style="margin:0; padding-left:18px;"></ul>
-      </section>
-    </div>
-  </main>
-
-  <footer class="muted">注意: このサンプルは教育目的。実運用では必ず法令準拠の取り扱いと暗号化・監査の実装が必要。</footer>
-
-  <!-- モーダル: 逮捕状詳細 / 作成 -->
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="panel">
-      <h3 id="modalTitle">逮捕状詳細</h3>
-      <div id="modalBody"></div>
-      <div style="text-align:right; margin-top:12px;">
-        <button class="btn secondary" id="closeModalBtn">閉じる</button>
-      </div>
-    </div>
+    <div class="title">web-term — Linux style</div>
   </div>
 
-  <script>
-    /* --- ダミーデータ（実運用ではサーバーAPIを呼ぶ） --- */
-    const demoData = [
-      { id: "A-2025-0001", name: "山田 太郎", issued: "2025-10-01", status: "issued", officer: "田中" },
-      { id: "A-2025-0002", name: "佐藤 花子", issued: "2025-09-20", status: "executed", officer: "佐々木" },
-      { id: "A-2025-0003", name: "鈴木 次郎", issued: "2025-08-15", status: "cancelled", officer: "高橋" },
-    ];
+  <main class="screen" id="screen" tabindex="0" aria-live="polite"></main>
 
-    /* --- 重要な注記（必ず守ること） ---
-       1) 認証/認可はサーバーで行う（例: OIDC, SAML）。フロントでパスワードを検証してはダメ。
-       2) センシティブなデータは送信時・保管時ともにTLS/強力な暗号(AES-256等)で暗号化する。
-       3) 監査ログは改ざん防止（WORMストレージや署名付きログ）で保存すること。
-       4) CSRF、XSS対策、入力検証、ファイル検査をサーバー側で実装すること。
-       5) ロールベースアクセス制御（RBAC）を厳密に行うこと。
-    */
+  <div class="footer">
+    <div>Tip: <span class="kbd">Tab</span> 補完 • <span class="kbd">↑/↓</span> 履歴 • <span class="kbd">Ctrl+L</span> で画面クリア</div>
+    <div class="muted">guest@webterm</div>
+  </div>
+</div>
 
-    // UI 要素
-    const loginCard = document.getElementById('loginCard');
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const app = document.getElementById('app');
-    const loginState = document.getElementById('loginState');
-    const userName = document.getElementById('userName');
-    const warrantTableBody = document.querySelector('#warrantTable tbody');
-    const searchInput = document.getElementById('search');
-    const statusFilter = document.getElementById('statusFilter');
-    const newWarrantBtn = document.getElementById('newWarrantBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const modal = document.getElementById('modal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalBody = document.getElementById('modalBody');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const auditLog = document.getElementById('auditLog');
+<script>
+/*
+  Web Terminal
+  - シンプルな仮想ファイルシステム
+  - コマンド履歴、Tab補完、Ctrl+L/Ctrl+C
+  - 保存不要でローカルで動作
+*/
 
-    // 簡易ログ（実運用は監査用APIに記録）
-    const logs = [];
+(function(){
+  const screen = document.getElementById('screen');
 
-    function addLog(text) {
-      const time = new Date().toISOString();
-      logs.unshift({time, text});
-      renderLogs();
-      // 実運用: ここで監査APIにPOST（認可済みの職員トークン利用）
+  // ユーザ情報 / 仮想ホスト
+  const USER = 'guest';
+  const HOST = 'webterm';
+  const HOME = '/home/' + USER;
+
+  // 仮想ファイルシステム（階層オブジェクト）
+  let fs = {
+    name:'/',
+    type:'dir',
+    children:{
+      home: {
+        name:'home',
+        type:'dir',
+        children:{
+          [USER]:{
+            name:USER,
+            type:'dir',
+            children:{
+              'README.txt': { name:'README.txt', type:'file', content:
+`Welcome to web-term!
+Type 'help' to see available commands.
+This is a simulated filesystem in your browser.`}
+            }
+          }
+        }
+      },
+      etc:{ name:'etc', type:'dir', children:{} },
+      var:{ name:'var', type:'dir', children:{} },
     }
-    function renderLogs() {
-      auditLog.innerHTML = logs.slice(0,10).map(l => `<li>${l.time} — ${escapeHtml(l.text)}</li>`).join('');
-    }
+  };
 
-    // テーブル描画
-    function renderTable(data) {
-      warrantTableBody.innerHTML = data.map(w => {
-        return `<tr>
-          <td>${escapeHtml(w.id)}</td>
-          <td>${escapeHtml(w.name)}</td>
-          <td>${escapeHtml(w.issued)}</td>
-          <td><span class="tag">${escapeHtml(w.status)}</span></td>
-          <td>${escapeHtml(w.officer)}</td>
-          <td>
-            <button class="btn" data-action="view" data-id="${escapeHtml(w.id)}">表示</button>
-            <button class="btn secondary" data-action="download" data-id="${escapeHtml(w.id)}">PDF</button>
-          </td>
-        </tr>`;
-      }).join('');
-    }
+  // 現在のカレントディレクトリ（パス配列）
+  let cwd = ['','home', USER]; // root is '' to simplify join => '/home/guest'
+  let history = [];
+  let histIndex = -1;
+  let inCommand = false; // 実行中フラグ（Ctrl+C用にシミュレーション）
+  let inputBuffer = '';
 
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-    }
+  // 利用可能コマンド一覧（補完用）
+  const COMMANDS = ['help','ls','cd','pwd','cat','echo','clear','date','whoami','mkdir','touch','rm','tree','about'];
 
-    // 検索・フィルタ処理（クライアントサイド・デモ）
-    function applyFilters() {
-      const q = searchInput.value.trim().toLowerCase();
-      const status = statusFilter.value;
-      let data = demoData.slice();
-      if (status) data = data.filter(d => d.status === status);
-      if (q) data = data.filter(d =>
-        d.id.toLowerCase().includes(q) ||
-        d.name.toLowerCase().includes(q) ||
-        d.issued.toLowerCase().includes(q)
-      );
-      renderTable(data);
-    }
+  // Utility: escape HTML
+  function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-    // イベント: テーブルの操作ボタン
-    document.querySelector('#warrantTable').addEventListener('click', (ev) => {
-      const btn = ev.target.closest('button');
-      if (!btn) return;
-      const action = btn.dataset.action;
-      const id = btn.dataset.id;
-      const record = demoData.find(r => r.id === id);
-      if (action === 'view') {
-        openModal(record);
-        addLog(`逮捕状表示: ${id}`);
-      } else if (action === 'download') {
-        // 実運用: PDF生成はサーバーで行い、認可済みトークンでダウンロードさせること
-        alert('PDFダウンロード（デモ）。実運用ではサーバー側で生成して下さい。');
-        addLog(`PDFダウンロード要求: ${id}`);
+  // print a normal output line
+  function addOutput(text, className='output'){
+    const div = document.createElement('div');
+    div.className = 'line';
+    const out = document.createElement('div');
+    out.className = className;
+    out.innerHTML = esc(text);
+    div.appendChild(out);
+    screen.appendChild(div);
+    screen.scrollTop = screen.scrollHeight;
+  }
+
+  // print a prompt + input line and attach input element (contenteditable)
+  function pushPrompt(prefill=''){
+    const line = document.createElement('div');
+    line.className = 'line';
+
+    const p = document.createElement('div');
+    p.className = 'prompt';
+    p.textContent = `${USER}@${HOST}:${getDisplayCwd()}$`;
+    line.appendChild(p);
+
+    const input = document.createElement('div');
+    input.className = 'input';
+    input.contentEditable = true;
+    input.spellcheck = false;
+    input.setAttribute('role','textbox');
+    input.setAttribute('aria-label','command input');
+    input.innerText = prefill;
+    line.appendChild(input);
+
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    line.appendChild(cursor);
+
+    screen.appendChild(line);
+    input.focus();
+    placeCaretAtEnd(input);
+    screen.scrollTop = screen.scrollHeight;
+
+    // key handling
+    input.addEventListener('keydown', e => {
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        const cmd = input.innerText.trim();
+        // remove prompt input
+        cursor.remove();
+        input.contentEditable = false;
+        runCommand(cmd);
+      } else if(e.key === 'Tab'){
+        e.preventDefault();
+        const cmdline = input.innerText;
+        const before = cmdline.slice(0, getCaretCharacterOffsetWithin(input));
+        const after = cmdline.slice(getCaretCharacterOffsetWithin(input));
+        const tokens = before.split(/\s+/);
+        const last = tokens[tokens.length-1] || '';
+        const prefix = last;
+        const suggestions = getCompletions(prefix);
+        if(suggestions.length === 1){
+          // complete
+          tokens[tokens.length-1] = suggestions[0];
+          const newLine = tokens.join(' ') + (after ? after : ' ');
+          input.innerText = newLine;
+          placeCaretAtEnd(input);
+        } else if(suggestions.length > 1){
+          // show suggestions
+          addOutput(suggestions.join('   '), 'muted');
+        }
+      } else if(e.key === 'ArrowUp'){
+        e.preventDefault();
+        if(history.length === 0) return;
+        histIndex = Math.max(0, histIndex === -1 ? history.length-1 : histIndex-1);
+        input.innerText = history[histIndex] || '';
+        placeCaretAtEnd(input);
+      } else if(e.key === 'ArrowDown'){
+        e.preventDefault();
+        if(history.length === 0) return;
+        if(histIndex === -1){ input.innerText = ''; return; }
+        histIndex = Math.min(history.length-1, histIndex+1);
+        input.innerText = history[histIndex] || '';
+        placeCaretAtEnd(input);
+      } else if(e.ctrlKey && e.key.toLowerCase() === 'l'){
+        e.preventDefault();
+        clearScreen();
+      } else if(e.ctrlKey && e.key.toLowerCase() === 'c'){
+        e.preventDefault();
+        // simulate interrupt
+        cursor.remove();
+        input.contentEditable = false;
+        addOutput('^C');
+        pushPrompt('');
       }
     });
+  }
 
-    function openModal(record) {
-      modalTitle.textContent = `逮捕状詳細 - ${record.id}`;
-      modalBody.innerHTML = `
-        <p><strong>氏名:</strong> ${escapeHtml(record.name)}</p>
-        <p><strong>発行日:</strong> ${escapeHtml(record.issued)}</p>
-        <p><strong>ステータス:</strong> ${escapeHtml(record.status)}</p>
-        <p><strong>担当:</strong> ${escapeHtml(record.officer)}</p>
-        <hr />
-        <p class="muted">ここに逮捕状本文、証拠添付、法的メモ等が表示されます（機密）。</p>
-      `;
-      modal.classList.remove('hidden');
+  // Show initial welcome + prompt
+  addOutput(`web-term — Linux style terminal (simulated). Type 'help' for commands.`, 'muted');
+  pushPrompt('');
+
+  // -- Command execution
+  function runCommand(line){
+    inCommand = true;
+    histIndex = -1;
+    if(line) history.push(line);
+    inputBuffer = line;
+    if(!line){
+      pushPrompt('');
+      inCommand = false;
+      return;
+    }
+    const parts = parseLine(line);
+    const cmd = parts[0];
+    const args = parts.slice(1);
+
+    // handle redirection for echo: echo hello > file
+    if(cmd === 'echo' && parts.includes('>')){
+      const gtIndex = parts.indexOf('>');
+      const content = parts.slice(1, gtIndex).join(' ').replace(/^"(.*)"$/,'$1').replace(/^'(.*)'$/,'$1');
+      const filename = parts[gtIndex+1];
+      if(!filename){
+        addOutput('No target file specified');
+      } else {
+        writeFile(resolvePath(filename), content);
+      }
+      pushPrompt('');
+      inCommand = false;
+      return;
     }
 
-    closeModalBtn.addEventListener('click', () => { modal.classList.add('hidden'); });
+    switch(cmd){
+      case 'help': cmd_help(args); break;
+      case 'ls': cmd_ls(args); break;
+      case 'pwd': cmd_pwd(args); break;
+      case 'cd': cmd_cd(args); break;
+      case 'cat': cmd_cat(args); break;
+      case 'echo': cmd_echo(args); break;
+      case 'clear': clearScreen(); pushPrompt(''); break;
+      case 'date': cmd_date(args); break;
+      case 'whoami': addOutput(USER); pushPrompt(''); break;
+      case 'mkdir': cmd_mkdir(args); break;
+      case 'touch': cmd_touch(args); break;
+      case 'rm': cmd_rm(args); break;
+      case 'tree': cmd_tree(args); break;
+      case 'about': addOutput('web-term: A simulated terminal implemented in HTML/CSS/JS.'); pushPrompt(''); break;
+      case '': pushPrompt(''); break;
+      default:
+        addOutput(`${cmd}: command not found`);
+        pushPrompt('');
+    }
+    inCommand = false;
+  }
 
-    // サンプル: CSVエクスポート（権限がある職員のみ）
-    exportBtn.addEventListener('click', () => {
-      // 実運用: サーバー側でアクセス制御・監査・暗号を行い、ログを記録すること
-      const csv = demoData.map(r => `${r.id},${r.name},${r.issued},${r.status},${r.officer}`).join('\n');
-      const blob = new Blob([csv], {type:'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'warrants_export.csv'; document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-      addLog('CSVエクスポート実行');
-    });
+  // --- Commands implementations
+  function cmd_help(){
+    const txt = [
+      'Available commands:',
+      COMMANDS.join('   '),
+      '',
+      "Examples:",
+      "  ls - list files",
+      "  cd /home/guest",
+      "  cat README.txt",
+      "  echo hello > note.txt  (writes file)",
+      "  tree - show directory tree"
+    ].join('\n');
+    addOutput(txt);
+    pushPrompt('');
+  }
 
-    // 新規逮捕状（クライアント側デモ）
-    newWarrantBtn.addEventListener('click', () => {
-      modalTitle.textContent = '新規逮捕状作成（デモ）';
-      modalBody.innerHTML = `
-        <form id="newForm">
-          <label>事案ID: <input name="id" required /></label><br/><br/>
-          <label>氏名: <input name="name" required /></label><br/><br/>
-          <label>発行日: <input name="issued" type="date" required /></label><br/><br/>
-          <label>担当: <input name="officer" required /></label><br/><br/>
-          <label>備考:<br/><textarea name="note" rows="4"></textarea></label><br/>
-          <div style="text-align:right; margin-top:8px;"><button class="btn" type="submit">作成</button></div>
-        </form>
-      `;
-      modal.classList.remove('hidden');
+  function cmd_ls(args){
+    const pathArg = args[0] || '.';
+    const node = getNode(resolvePath(pathArg));
+    if(!node){ addOutput(`ls: cannot access '${pathArg}': No such file or directory`); pushPrompt(''); return; }
+    if(node.type === 'file'){ addOutput(node.name); pushPrompt(''); return; }
+    const names = Object.values(node.children).map(n => n.type === 'dir' ? n.name + '/' : n.name);
+    addOutput(names.join('   '));
+    pushPrompt('');
+  }
 
-      document.getElementById('newForm').addEventListener('submit', (ev) => {
-        ev.preventDefault();
-        const fd = new FormData(ev.target);
-        const newRec = {
-          id: fd.get('id'),
-          name: fd.get('name'),
-          issued: fd.get('issued'),
-          status: 'issued',
-          officer: fd.get('officer')
-        };
-        // 実運用: ここは必ずサーバーAPIへPOSTし、サーバー側で検証・監査を行う
-        demoData.unshift(newRec);
-        applyFilters();
-        addLog(`逮捕状作成: ${newRec.id}`);
-        modal.classList.add('hidden');
-      }, { once: true });
-    });
+  function cmd_pwd(){ addOutput(getFullPath(cwd)); pushPrompt(''); }
 
-    // シンプルな「ログイン」動作（デモ）
-    loginBtn.addEventListener('click', () => {
-      // 実運用ではここでパスワード検証を行わない。サーバーに送ってIDトークンを受け取る。
-      const u = document.getElementById('username').value || 'demo.officer';
-      loginCard.classList.add('hidden');
-      app.classList.remove('hidden');
-      loginState.textContent = '認証済み';
-      userName.textContent = `職員: ${u}（例デモ）`;
-      addLog(`ログイン: ${u}`);
-      applyFilters();
-    });
+  function cmd_cd(args){
+    const target = args[0] || HOME;
+    const newPath = resolvePath(target);
+    const node = getNode(newPath);
+    if(!node || node.type !== 'dir'){ addOutput(`cd: ${target}: No such directory`); pushPrompt(''); return; }
+    cwd = normalizePathArray(newPath);
+    pushPrompt('');
+  }
 
-    logoutBtn.addEventListener('click', () => {
-      loginCard.classList.remove('hidden');
-      app.classList.add('hidden');
-      loginState.textContent = '未認証';
-      addLog('ログアウト');
-    });
+  function cmd_cat(args){
+    if(!args[0]){ addOutput('cat: missing operand'); pushPrompt(''); return; }
+    const node = getNode(resolvePath(args[0]));
+    if(!node){ addOutput(`cat: ${args[0]}: No such file`); pushPrompt(''); return; }
+    if(node.type !== 'file'){ addOutput(`cat: ${args[0]}: Is a directory`); pushPrompt(''); return; }
+    addOutput(node.content || '');
+    pushPrompt('');
+  }
 
-    // フィルタ/検索イベント
-    searchInput.addEventListener('input', applyFilters);
-    statusFilter.addEventListener('change', applyFilters);
+  function cmd_echo(args){
+    if(args.length === 0){ addOutput(''); pushPrompt(''); return; }
+    addOutput(args.join(' '));
+    pushPrompt('');
+  }
 
-    // 初期描画
-    renderTable(demoData);
-    renderLogs();
-  </script>
+  function cmd_date(){
+    addOutput(new Date().toString());
+    pushPrompt('');
+  }
+
+  function cmd_mkdir(args){
+    if(!args[0]){ addOutput('mkdir: missing operand'); pushPrompt(''); return; }
+    const path = resolvePath(args[0]);
+    const parentPath = parentOf(path);
+    const name = lastPathSegment(path);
+    const parent = getNode(parentPath);
+    if(!parent || parent.type !== 'dir'){ addOutput(`mkdir: cannot create directory '${args[0]}': No such file or directory`); pushPrompt(''); return; }
+    if(parent.children[name]){ addOutput(`mkdir: cannot create directory '${args[0]}': File exists`); pushPrompt(''); return; }
+    parent.children[name] = { name:name, type:'dir', children:{} };
+    pushPrompt('');
+  }
+
+  function cmd_touch(args){
+    if(!args[0]){ addOutput('touch: missing file operand'); pushPrompt(''); return; }
+    const path = resolvePath(args[0]);
+    const parentPath = parentOf(path);
+    const name = lastPathSegment(path);
+    const parent = getNode(parentPath);
+    if(!parent || parent.type !== 'dir'){ addOutput(`touch: cannot touch '${args[0]}': No such file or directory`); pushPrompt(''); return; }
+    parent.children[name] = parent.children[name] || { name:name, type:'file', content:'' };
+    pushPrompt('');
+  }
+
+  function cmd_rm(args){
+    if(!args[0]){ addOutput('rm: missing operand'); pushPrompt(''); return; }
+    const flags = args.filter(a => a.startsWith('-'));
+    const recursive = flags.includes('-r') || flags.includes('-rf');
+    const targets = args.filter(a => !a.startsWith('-'));
+    for(const t of targets){
+      const path = resolvePath(t);
+      const parent = getNode(parentOf(path));
+      const name = lastPathSegment(path);
+      if(!parent || !parent.children[name]){ addOutput(`rm: cannot remove '${t}': No such file or directory`); continue; }
+      const node = parent.children[name];
+      if(node.type === 'dir' && !recursive){
+        addOutput(`rm: cannot remove '${t}': Is a directory (use -r)`);
+        continue;
+      }
+      // delete
+      delete parent.children[name];
+    }
+    pushPrompt('');
+  }
+
+  function cmd_tree(){
+    const node = getNode(getFullPath(cwd));
+    const lines = [];
+    function walk(n, prefix=''){
+      lines.push(prefix + n.name + (n.type==='dir' ? '/' : ''));
+      if(n.type === 'dir'){
+        const keys = Object.keys(n.children).sort();
+        keys.forEach((k,i) => {
+          const child = n.children[k];
+          const isLast = i === keys.length - 1;
+          walk(child, prefix + (n.name === '/' ? '' : '  '));
+        });
+      }
+    }
+    walk(node, '');
+    addOutput(lines.join('\n'));
+    pushPrompt('');
+  }
+
+  // --- Filesystem helpers
+  function resolvePath(path){
+    if(!path) return getFullPath(cwd);
+    // expand ~
+    if(path.startsWith('~')) path = HOME + path.slice(1);
+    if(path.startsWith('/')){
+      return normalizePath(path);
+    } else {
+      const base = getFullPath(cwd);
+      return normalizePath(base + (base.endsWith('/') ? '' : '/') + path);
+    }
+  }
+
+  function normalizePath(p){
+    const parts = p.split('/').filter(() => true);
+    const out = [];
+    for(const part of parts){
+      if(part === '' || part === undefined) continue;
+      if(part === '.') continue;
+      if(part === '..'){ out.pop(); continue; }
+      out.push(part);
+    }
+    return '/' + out.join('/');
+  }
+
+  function normalizePathArray(p){
+    if(Array.isArray(p)) return p;
+    const s = p.split('/');
+    // first element may be ''
+    if(s[0] !== '') s.unshift('');
+    return s;
+  }
+
+  function getFullPath(arr){
+    if(Array.isArray(arr)) return arr.join('/') || '/';
+    return arr;
+  }
+
+  function getDisplayCwd(){
+    const p = getFullPath(cwd);
+    if(p.startsWith(HOME)) return '~' + p.slice(HOME.length);
+    return p;
+  }
+
+  function parentOf(p){
+    const np = normalizePath(p);
+    if(np === '/') return '/';
+    const idx = np.lastIndexOf('/');
+    return idx === 0 ? '/' : np.slice(0, idx);
+  }
+
+  function lastPathSegment(p){
+    const np = normalizePath(p);
+    if(np === '/') return '/';
+    const idx = np.lastIndexOf('/');
+    return np.slice(idx+1);
+  }
+
+  // Walk fs to find node by path (string)
+  function getNode(path){
+    const np = normalizePath(path);
+    if(np === '/') return fs;
+    const segs = np.split('/').filter(s => s.length>0);
+    let node = fs;
+    for(const seg of segs){
+      if(!node.children || !node.children[seg]) return null;
+      node = node.children[seg];
+    }
+    return node;
+  }
+
+  function writeFile(path, content){
+    const p = normalizePath(path);
+    const parentPath = parentOf(p);
+    const parent = getNode(parentPath);
+    const name = lastPathSegment(p);
+    if(!parent || parent.type !== 'dir'){ addOutput('Cannot write file: no such directory'); return; }
+    parent.children[name] = { name:name, type:'file', content:content };
+    addOutput(`Wrote ${p}`);
+  }
+
+  // Completion: commands + files/dirs in cwd
+  function getCompletions(prefix){
+    const spaceIndex = prefix.lastIndexOf(' ');
+    if(spaceIndex !== -1){
+      // complete filename
+      const last = prefix.slice(spaceIndex+1);
+      const node = getNode(getFullPath(cwd));
+      if(!node) return [];
+      const items = Object.values(node.children || {}).map(n => n.type === 'dir' ? n.name + '/' : n.name);
+      return items.filter(i => i.startsWith(last));
+    } else {
+      return COMMANDS.filter(c => c.startsWith(prefix));
+    }
+  }
+
+  // Small utilities for caret positioning in contenteditable
+  function placeCaretAtEnd(el) {
+    el.focus();
+    if (typeof window.getSelection != "undefined"
+        && typeof document.createRange != "undefined") {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
+  function getCaretCharacterOffsetWithin(element) {
+    var caretOffset = 0;
+    var sel = window.getSelection();
+    if (sel.rangeCount > 0) {
+      var range = sel.getRangeAt(0);
+      var preCaretRange = range.cloneRange();
+      preCaretRange.selectNodeContents(element);
+      preCaretRange.setEnd(range.endContainer, range.endOffset);
+      caretOffset = preCaretRange.toString().length;
+    }
+    return caretOffset;
+  }
+
+  // Clear screen
+  function clearScreen(){
+    screen.innerHTML = '';
+  }
+
+  // nice little function to print errors
+  function error(msg){
+    addOutput(msg, 'muted');
+  }
+
+  // focus screen click
+  screen.addEventListener('click', e => {
+    // focus the last input if exists
+    const inputs = screen.querySelectorAll('.input[contenteditable="true"]');
+    if(inputs.length) inputs[inputs.length-1].focus();
+  });
+
+  // Accessibility: trap focus to terminal area so keyboard works
+  document.addEventListener('keydown', e => {
+    // If user presses Ctrl+L outside input, clear
+    if(e.ctrlKey && e.key.toLowerCase() === 'l'){
+      e.preventDefault();
+      clearScreen();
+      pushPrompt('');
+    }
+  });
+
+  // helper to parse a command line honoring quoted strings and >
+  function parseLine(line){
+    const arr = [];
+    let cur = '';
+    let inSingle=false, inDouble=false;
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(ch === ' ' && !inSingle && !inDouble){
+        if(cur !== '') { arr.push(cur); cur = ''; }
+        continue;
+      }
+      if(ch === '"' && !inSingle){ inDouble = !inDouble; continue; }
+      if(ch === "'" && !inDouble){ inSingle = !inSingle; continue; }
+      if(ch === '>' && !inSingle && !inDouble){
+        if(cur !== '') { arr.push(cur); cur = ''; }
+        arr.push('>');
+        continue;
+      }
+      cur += ch;
+    }
+    if(cur !== '') arr.push(cur);
+    return arr;
+  }
+
+  // expose nothing to global scope
+})();
+</script>
 </body>
 </html>
