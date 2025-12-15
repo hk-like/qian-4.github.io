@@ -1,43 +1,353 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Protected Content</title>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-  <style>
-    #content {
-      display: none;
-      margin-top: 20px;
-      padding: 16px;
-      border: 1px solid #ccc;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Googlebot 管理デモ（ローカル）</title>
+<style>
+  :root{
+    --bg:#0f1720; --panel:#0b1220; --muted:#9aa7b2; --accent:#06c; --ok:#16a34a; --err:#ef4444;
+    --glass: rgba(255,255,255,0.03);
+  }
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  body{background:linear-gradient(180deg,#071022 0%, #071724 100%); color:#e6eef6; display:flex; gap:16px; padding:18px; box-sizing:border-box;}
+  .app{display:grid;grid-template-columns:320px 1fr;gap:16px; width:100%; max-width:1400px; margin:0 auto;}
+  .sidebar{background:var(--panel); padding:16px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.6);}
+  h1{margin:0 0 12px 0;font-size:18px}
+  .section{margin-bottom:14px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  select,input[type="text"],textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit;outline:none}
+  textarea{min-height:140px;resize:vertical}
+  button{background:var(--accent);border:none;padding:10px 12px;border-radius:8px;color:white;cursor:pointer}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+  .row{display:flex;gap:8px}
+  .main{display:flex;flex-direction:column;gap:16px}
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+  .logs{height:240px;overflow:auto;background:#021024;border-radius:8px;padding:10px;font-family:monospace;font-size:13px;color:#bfe6ff}
+  .status-ok{color:var(--ok)}
+  .status-err{color:var(--err)}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}
+  .preview{display:flex;gap:12px;align-items:center}
+  .img-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.04)}
+  .meta{font-size:13px;color:var(--muted)}
+  .small{font-size:12px;color:var(--muted)}
+  footer{color:var(--muted);font-size:12px;padding:6px 0}
+  .toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;font-size:12px}
+</style>
 </head>
 <body>
-  <h1>この先は人間のみ</h1>
+  <div class="app" role="application" aria-label="Googlebot管理デモ">
+    <aside class="sidebar panel" aria-label="操作パネル">
+      <h1>Googlebot 管理（デモ）</h1>
+      <div class="section">
+        <label>User-Agent</label>
+        <select id="uaSelect">
+          <option value="googlebot">Googlebot (Desktop)</option>
+          <option value="googlebot-mobile">Googlebot (Smartphone)</option>
+          <option value="googlebot-image">Googlebot-Image</option>
+        </select>
+      </div>
 
-  <p>コンテンツを表示するには reCAPTCHA を完了してください。</p>
+      <div class="section">
+        <label>robots.txt（編集して即時反映）</label>
+        <textarea id="robotsEditor"></textarea>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button id="applyRobots">適用</button>
+          <button id="presetBlocked" class="btn-ghost">gstatic ロゴをブロックする例</button>
+        </div>
+      </div>
 
-  <!-- reCAPTCHA -->
-  <div class="g-recaptcha"
-       data-sitekey="6LeqICwsAAAAAG73B0XgIkTQ6kgXNtmO4Emz6o_f"
-       data-callback="onVerified"></div>
+      <div class="section">
+        <label>テスト URL</label>
+        <input id="testUrl" type="text" placeholder="/path/to/resource or https://example.com/some.png" />
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button id="testBtn">クロールをシミュレート</button>
+          <button id="clearLogs" class="btn-ghost">ログクリア</button>
+        </div>
+      </div>
 
-  <!-- 守られているコンテンツ -->
-  <div id="content">
-    <h2>限定コンテンツ</h2>
-    <p>おめでとうございます。あなたはロボットではないらしい。</p>
+      <div class="section">
+        <label>オプション</label>
+        <div class="row">
+          <label class="small"><input type="checkbox" id="simulateBlockedFetch" /> 外部リソースは robots.txt でブロック</label>
+        </div>
+        <div style="margin-top:8px" class="small">備考: これはローカルシミュレーションです。本物のGooglebotの挙動はもっと複雑。</div>
+      </div>
+
+      <footer>
+        <div class="small">デモです。本物のGoogleサービスに変更は加えません。</div>
+      </footer>
+    </aside>
+
+    <main class="main">
+      <div class="panel">
+        <div class="toolbar">
+          <div>
+            <strong>クロールログ</strong>
+            <span class="small" id="logMeta">空</span>
+          </div>
+          <div class="chips" aria-hidden>
+            <div class="chip">SSE: ログ流し可</div>
+            <div class="chip">robots.txt テスト</div>
+            <div class="chip">UA 切替</div>
+          </div>
+        </div>
+        <div class="logs" id="logs" role="log" aria-live="polite"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="downloadLogs" class="btn-ghost">ログをダウンロード</button>
+          <button id="copyLogs" class="btn-ghost">ログをコピー</button>
+        </div>
+      </div>
+
+      <div class="panel" id="previewPanel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <strong>プレビュー / 判定</strong>
+          <div class="small" id="previewHint">ここに判定の要約が出ます</div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center">
+          <img id="previewImg" class="img-thumb" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjMDMxNTRGIiByeD0iOCIvPjx0ZXh0IHg9IjMyIiB5PSIzNiIgZm9udC1zaXplPSIxMCIgZmlsbD0iI2ZmZiIgZm9udC1mYW1pbHk9IlZlcmRhbmEsIGFyaWFsLCBzYW5zLXNlcmlmIj50aW1lbGluZTwvdGV4dD48L3N2Zz4=" alt="preview" />
+          <div>
+            <div id="previewTitle"><strong>リソース:</strong> —</div>
+            <div class="meta" id="previewMeta">method: POST · Accept: text/event-stream</div>
+            <div style="margin-top:8px" id="previewDecision">
+              まだ何もテストされていません
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <strong>内部モデル（何が起きるか、ざっくり説明）</strong>
+        <ol style="margin-top:8px" class="small">
+          <li>テストボタンでURLを送る（User-Agentは選択済み）</li>
+          <li>robots.txt をパースして Allow/Disallow を評価</li>
+          <li>外部ドメインの場合は「外部リソースブロック」オプションを参照</li>
+          <li>許可されていれば疑似Fetch（擬似遅延）を行いログを流す</li>
+        </ol>
+        <div style="margin-top:10px" class="small">注意：本デモは簡易判定です。実際のクロールでは Google のブラックボックスが山ほど働きます。</div>
+      </div>
+    </main>
   </div>
 
-  <script>
-    function onVerified(token) {
-      // 本来はここでサーバーに token を送って検証する
-      console.log("reCAPTCHA token:", token);
+<script>
+/*
+  Googlebot 管理デモ（ローカル）
+  - robots.txt の簡易パーサ（User-agent/Allow/Disallow）
+  - URL の相対→絶対変換
+  - ログを擬似的に SSE 風に出す
+  - "gstaticロゴがブロックされている" プリセットを用意
+*/
 
-      // デモなので即表示
-      document.getElementById("content").style.display = "block";
+const logsEl = document.getElementById('logs');
+const uaSelect = document.getElementById('uaSelect');
+const robotsEditor = document.getElementById('robotsEditor');
+const applyRobots = document.getElementById('applyRobots');
+const testBtn = document.getElementById('testBtn');
+const testUrlInput = document.getElementById('testUrl');
+const previewTitle = document.getElementById('previewTitle');
+const previewMeta = document.getElementById('previewMeta');
+const previewDecision = document.getElementById('previewDecision');
+const previewImg = document.getElementById('previewImg');
+const presetBlocked = document.getElementById('presetBlocked');
+const simulateBlockedFetch = document.getElementById('simulateBlockedFetch');
+const clearLogsBtn = document.getElementById('clearLogs');
+const downloadLogs = document.getElementById('downloadLogs');
+const copyLogs = document.getElementById('copyLogs');
+const logMeta = document.getElementById('logMeta');
+
+// 初期 robots.txt の例
+robotsEditor.value = `User-agent: *
+Disallow: /private/
+Allow: /public/
+
+# 例: gstaticのロゴを禁止すると Search Console に警告が出ることがある
+# Disallow: /external/gstatic/`;
+
+// ログユーティリティ
+function log(line, level='info'){
+  const t = new Date().toLocaleTimeString();
+  const el = document.createElement('div');
+  el.textContent = `[${t}] ${line}`;
+  if(level==='err') el.style.color = '#ff9a9a';
+  if(level==='ok') el.style.color = '#9cf5b6';
+  logsEl.appendChild(el);
+  logsEl.scrollTop = logsEl.scrollHeight;
+  logMeta.textContent = `ログ数: ${logsEl.childNodes.length}`;
+}
+
+// 簡易 robots.txt パーサ（非常に簡易）
+function parseRobots(txt){
+  const lines = txt.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const rules = [];
+  let currentAgents = [];
+  for(const l of lines){
+    if(l.startsWith('#')) continue;
+    const m = l.match(/^([^:]+):\s*(.*)$/);
+    if(!m) continue;
+    const key = m[1].trim().toLowerCase();
+    const val = m[2].trim();
+    if(key === 'user-agent'){
+      currentAgents = [val.toLowerCase()];
+      rules.push({agents: currentAgents, allow:[], disallow:[]});
+    } else if(key === 'disallow'){
+      if(rules.length===0) rules.push({agents:['*'],allow:[],disallow:[]});
+      rules[rules.length-1].disallow.push(val);
+    } else if(key === 'allow'){
+      if(rules.length===0) rules.push({agents:['*'],allow:[],disallow:[]});
+      rules[rules.length-1].allow.push(val);
+    } else {
+      // 無視
     }
-  </script>
+  }
+  return rules;
+}
+
+// 判定: URL が robots.txt で許可されるか（簡易持ち分）
+function isAllowedByRobots(url, ua, rules){
+  // path 部分を判定
+  try {
+    const u = new URL(url, location.href);
+    const path = u.pathname + u.search;
+    // マッチルールを最長一致で処理（非常に簡易）
+    let applicable = {allow:[], disallow:[]};
+    for(const r of rules){
+      if(r.agents.some(a => a === '*' || ua.includes(a))){
+        applicable.allow.push(...r.allow);
+        applicable.disallow.push(...r.disallow);
+      }
+    }
+    // longest matching rule applies: if any disallow is exact prefix of path and longer than any allow -> disallow
+    let maxAllow = -1, maxDisallow = -1;
+    for(const a of applicable.allow){
+      if(a === '') continue;
+      if(path.startsWith(a) && a.length > maxAllow) maxAllow = a.length;
+    }
+    for(const d of applicable.disallow){
+      if(d === '') continue;
+      if(path.startsWith(d) && d.length > maxDisallow) maxDisallow = d.length;
+    }
+    // debug: console.log({path, maxAllow, maxDisallow});
+    if(maxDisallow > maxAllow) return false;
+    return true;
+  } catch(e){
+    return true;
+  }
+}
+
+// 擬似Fetch（SSE風ログを出す）
+async function simulateFetch(url, ua){
+  const abs = (new URL(url, location.href)).href;
+  previewTitle.innerHTML = `<strong>リソース:</strong> ${abs}`;
+  previewMeta.textContent = `User-Agent: ${ua} · Simulate fetch...`;
+
+  // 表示サムネは絶対パスに gstatic が含まれるとロゴ風に変える（デモ）
+  if(abs.includes('gstatic.com')){
+    previewImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjMjg4QkY0IiByeD0i8i8iLz48dGV4dCB4PSIzMiIgeT0iMzYiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkdTVFA8L3RleHQ+PC9zdmc+';
+  } else {
+    previewImg.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjMDMxNTRGIiByeD0i8i8iLz48dGV4dCB4PSIzMiIgeT0iMzYiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlJlc291cmNlPC90ZXh0Pjwvc3ZnPg==';
+  }
+
+  // ステータス：ネットワーク遅延を模擬
+  const steps = [
+    {t: 300, msg: `DNS ルックアップ（${Math.floor(Math.random()*40)+10}ms）`},
+    {t: 120, msg: `TCP/TLS ハンドシェイク（${Math.floor(Math.random()*40)+20}ms）`},
+    {t: 400, msg: `リクエスト送信`},
+    {t: 600, msg: `バックエンド処理`},
+  ];
+  for(const s of steps){
+    log(s.msg);
+    await new Promise(r => setTimeout(r, s.t));
+  }
+  // レスポンス判定
+  // 1) robots.txt による拒否
+  const robotsRules = parseRobots(robotsEditor.value);
+  const allowed = isAllowedByRobots(url, ua, robotsRules);
+  if(!allowed){
+    log(`robots.txt によりブロックされました -> ${abs}`, 'err');
+    previewDecision.innerHTML = `<span style="color:var(--err)">判定: robots.txt によりブロック</span>`;
+    return {status:403, reason:'robots.txt blocked'};
+  }
+
+  // 2) 外部リソースブロックオプション（デモ）
+  const u = new URL(abs, location.href);
+  if(simulateBlockedFetch.checked && u.hostname !== location.hostname){
+    log(`外部ドメイン ${u.hostname} は「外部リソースブロック」設定により拒否`, 'err');
+    previewDecision.innerHTML = `<span style="color:var(--err)">判定: 外部リソースとしてブロック</span>`;
+    return {status:403, reason:'external-block'};
+  }
+
+  // 3) 成功（SSE でチャンクを受信する風に表示）
+  log(`接続成功: ${abs}`, 'ok');
+  previewDecision.innerHTML = `<span style="color:var(--ok)">判定: 許可（フェッチ成功）</span>`;
+
+  // SSE 風のチャンクを流す（デモ）
+  const chunks = [
+    'data: {"event":"meta","progress":10}\n\n',
+    'data: {"event":"meta","progress":40}\n\n',
+    'data: {"event":"image","chunk":1}\n\n',
+    'data: {"event":"meta","progress":80}\n\n',
+    'data: {"event":"complete","url":"'+abs+'"}\n\n'
+  ];
+  for(const c of chunks){
+    log('SSE受信: ' + c.replace(/\n/g,'|'));
+    await new Promise(r => setTimeout(r, 200));
+  }
+  return {status:200, url:abs};
+}
+
+// イベントバインド
+applyRobots.addEventListener('click', () => {
+  log('robots.txt を適用しました');
+});
+
+presetBlocked.addEventListener('click', () => {
+  robotsEditor.value = `User-agent: *
+Disallow: /private/
+Disallow: /external/gstatic/
+Allow: /public/`;
+  log('プリセット: gstatic ロゴをブロックする設定を読み込みました');
+});
+
+testBtn.addEventListener('click', async () => {
+  const raw = testUrlInput.value.trim();
+  if(!raw){ alert('テストするURLを入れてください'); return; }
+  const ua = uaSelect.value;
+  log(`テスト開始 (${ua}) -> ${raw}`);
+  try {
+    await simulateFetch(raw, ua);
+  } catch(e) {
+    log('予期せぬエラー: ' + (e.message || e), 'err');
+  }
+});
+
+clearLogsBtn.addEventListener('click', () => {
+  logsEl.innerHTML = '';
+  logMeta.textContent = '空';
+});
+
+downloadLogs.addEventListener('click', () => {
+  const text = Array.from(logsEl.childNodes).map(n => n.textContent).join('\n');
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `googlebot-demo-logs-${Date.now()}.txt`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+
+copyLogs.addEventListener('click', () => {
+  const text = Array.from(logsEl.childNodes).map(n => n.textContent).join('\n');
+  navigator.clipboard?.writeText(text).then(()=>{
+    log('ログをクリップボードにコピーしました');
+  }).catch(()=> log('クリップボードに書けませんでした', 'err'));
+});
+
+// 初期ログ
+log('デモ開始。操作パネルで設定して「クロールをシミュレート」を押してください。');
+log('例: /api/images/generate-stream3 を入れてプリセットで gstatic をブロックすると Search Console の警告っぽくなるよ。');
+</script>
 </body>
 </html>
