@@ -1,276 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>サンプルブログ — 山田太郎のメモ帳</title>
-  <meta name="description" content="シンプルでレスポンシブなブログテンプレート（ダークモード・検索付き）" />
-  <style>
-    :root{
-      --bg:#f6f7f9; --card:#ffffff; --text:#111827; --muted:#6b7280;
-      --accent:#2563eb; --radius:12px;
-    }
-    [data-theme="dark"]{
-      --bg:#0b1020; --card:#0f1724; --text:#e6eef8; --muted:#9aa6bf; --accent:#60a5fa;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial;
-      background:linear-gradient(180deg,var(--bg), #ffffff 60%); color:var(--text);
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-      padding:24px;
-    }
-
-    .wrap{max-width:1100px;margin:0 auto;}
-
-    header{
-      display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:20px;
-    }
-    .site-brand{display:flex;gap:12px;align-items:center}
-    .logo{
-      width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;
-      background:linear-gradient(135deg,var(--accent), #7dd3fc); color:white;font-weight:700;font-size:18px;
-      box-shadow:0 6px 18px rgba(16,24,40,0.06);
-    }
-    .title{font-size:18px;font-weight:700}
-    nav a{margin-left:14px;color:var(--muted);text-decoration:none;font-size:14px}
-    .controls{display:flex;gap:8px;align-items:center}
-    .search{
-      padding:8px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);
-      background:var(--card); min-width:200px;
-    }
-    .btn{
-      background:var(--card); border:1px solid rgba(0,0,0,0.06); padding:8px 10px; border-radius:10px;
-      cursor:pointer; font-weight:600;
-    }
-
-    .hero{
-      background:var(--card); border-radius:var(--radius); padding:28px; margin-bottom:20px;
-      box-shadow:0 8px 30px rgba(2,6,23,0.06);
-    }
-    .hero h1{margin:0 0 6px 0;font-size:26px}
-    .hero p{margin:0;color:var(--muted)}
-
-    .posts{
-      display:grid; grid-template-columns: repeat(3, 1fr); gap:18px;
-      margin-top:18px;
-    }
-    .card{
-      background:var(--card); border-radius:14px; overflow:hidden; display:flex;flex-direction:column;
-      box-shadow:0 6px 18px rgba(2,6,23,0.04); transition:transform .18s ease, box-shadow .18s ease;
-    }
-    .card:hover{transform:translateY(-6px); box-shadow:0 12px 40px rgba(2,6,23,0.08)}
-    .card .thumb{
-      height:140px; background:linear-gradient(120deg,#c7eaff,#fef3c7); display:flex;align-items:flex-end;
-      padding:12px;color:#0b1220;font-weight:700;font-size:14px;
-    }
-    .card .body{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1}
-    .meta{font-size:13px;color:var(--muted)}
-    .excerpt{flex:1;color:var(--text);line-height:1.5;font-size:14px}
-    .tags{display:flex;gap:8px;flex-wrap:wrap}
-    .tag{font-size:12px;padding:6px 8px;border-radius:999px;background:rgba(0,0,0,0.04);color:var(--muted)}
-
-    .read{align-self:flex-start;padding:8px 12px;border-radius:10px;background:var(--accent);color:white;text-decoration:none;font-weight:700}
-
-    /* modal */
-    .modal{
-      position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);padding:30px;
-    }
-    .modal.show{display:flex}
-    .modal .panel{max-width:800px;width:100%;background:var(--card);border-radius:12px;padding:20px;max-height:80vh;overflow:auto}
-    .modal .panel h2{margin-top:0}
-
-    footer{margin-top:26px;color:var(--muted);font-size:14px;padding-bottom:40px}
-
-    @media (max-width:900px){
-      .posts{grid-template-columns:repeat(2,1fr)}
-    }
-    @media (max-width:600px){
-      header{flex-direction:column;align-items:stretch;gap:12px}
-      .posts{grid-template-columns:1fr}
-      .search{min-width:unset;width:100%}
-      .controls{justify-content:space-between}
-    }
-  </style>
+<meta charset="UTF-8">
+<title>なかのひとチャットボット例</title>
 </head>
 <body>
-  <div class="wrap" id="page">
-    <header>
-      <div class="site-brand">
-        <div class="logo">T</div>
-        <div>
-          <div class="title">山田太郎のメモ帳</div>
-          <div style="font-size:12px;color:var(--muted)">テーマ: 技術 / 日常 / 思考</div>
-        </div>
-      </div>
 
-      <div class="controls">
-        <input class="search" id="search" placeholder="投稿を検索…" aria-label="投稿を検索" />
-        <button class="btn" id="toggleTheme" title="ダーク/ライト切替">ダーク切替</button>
-      </div>
-    </header>
+<h1>自分のサイトにチャットボットを設置</h1>
+<p>このページ下部にチャットボットが表示されます。</p>
 
-    <section class="hero" role="region" aria-label="イントロ">
-      <h1>短い読み物と技術メモをここに</h1>
-      <p>簡潔に書いて、すぐに読み切れる投稿だけを載せる。フィードはレスポンシブで、ダークモードをサポート。</p>
-    </section>
+<!-- チャットボットの初期化スクリプト -->
+<script>
+(function (c, n, s) {
+    if (c[n] === void 0) {
+        c['ULObject'] = n;
+        c[n] = c[n] || function () {(c[n].q = c[n].q || []).push(arguments)};
+        c[n].l = 1 * new Date();
+        var e = document.createElement('script');
+        e.async = 1;
+        e.src = s + "/chatbot.js";
+        var t = document.getElementsByTagName('script')[0];
+        t.parentNode.insertBefore(e, t);
+    }
+})(window, 'ul_widget', 'https://support-widget.nakanohito.jp');
 
-    <main>
-      <section class="posts" id="posts">
-        <!-- Post 1 -->
-        <article class="card" data-title="はじめてのJavaScript">
-          <div class="thumb">Web / JavaScript</div>
-          <div class="body">
-            <div class="meta">2025-12-16 • 5分で読める</div>
-            <div class="excerpt">DOM の基本からイベント処理まで。小さな例で動きを確認しながら学ぶ入門メモ。</div>
-            <div class="tags">
-              <span class="tag">JavaScript</span>
-              <span class="tag">初心者向け</span>
-            </div>
-            <a class="read" href="#" data-post="1">続きを読む</a>
-          </div>
-          <div class="full" hidden>
-            <h2>はじめてのJavaScript</h2>
-            <p>JavaScriptはブラウザ上で動くプログラミング言語だ。まずはコンソールログから始めよう。</p>
-            <pre><code>console.log('こんにちは、世界');</code></pre>
-            <p>次に DOM を触ってみる。document.querySelectorで要素を取って、テキストを置き換えるだけで反応が見える。</p>
-            <p>最後にイベントリスナでクリックや入力を扱えるようにしておくと便利。</p>
-          </div>
-        </article>
+// ウィジェットの初期化（IDはあなたのアカウントのものに変更）
+ul_widget('init', {'id': 1002});
+</script>
 
-        <!-- Post 2 -->
-        <article class="card" data-title="効率的なメモ術">
-          <div class="thumb">Life / Productivity</div>
-          <div class="body">
-            <div class="meta">2025-11-02 • 3分で読める</div>
-            <div class="excerpt">メモは検索しやすく、短く。見返すこと前提の整理法を紹介。</div>
-            <div class="tags">
-              <span class="tag">生産性</span>
-              <span class="tag">メモ術</span>
-            </div>
-            <a class="read" href="#" data-post="2">続きを読む</a>
-          </div>
-          <div class="full" hidden>
-            <h2>効率的なメモ術</h2>
-            <p>メモは「書く」より「見返す」前提で作る。タイトルを一行で要約し、タグを3つ以内にしておくと後で探しやすい。</p>
-            <ul>
-              <li>短いタイトル</li>
-              <li>日付を必ず入れる</li>
-              <li>タグは限定的に</li>
-            </ul>
-          </div>
-        </article>
-
-        <!-- Post 3 -->
-        <article class="card" data-title="CSSグリッドで作るレイアウト">
-          <div class="thumb">Web / CSS</div>
-          <div class="body">
-            <div class="meta">2025-08-19 • 4分で読める</div>
-            <div class="excerpt">grid-template-columns と auto-fill を使えば、柔軟なカードレイアウトが簡単に作れる。</div>
-            <div class="tags">
-              <span class="tag">CSS</span>
-              <span class="tag">レイアウト</span>
-            </div>
-            <a class="read" href="#" data-post="3">続きを読む</a>
-          </div>
-          <div class="full" hidden>
-            <h2>CSSグリッドで作るレイアウト</h2>
-            <p>簡単な例：</p>
-            <pre><code>
-.container{
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap:16px;
-}
-            </code></pre>
-            <p>レスポンシブに強く、カードレイアウトと相性が良い。</p>
-          </div>
-        </article>
-      </section>
-    </main>
-
-    <!-- Modal for full post -->
-    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true">
-      <div class="panel" role="document">
-        <button class="btn" id="closeModal" style="float:right;margin-left:8px;">閉じる</button>
-        <div id="modalContent"></div>
-      </div>
-    </div>
-
-    <footer>
-      © <span id="year"></span> 山田太郎 — 思いつきと備忘録。ソースは自由に改変して構わない。
-    </footer>
-  </div>
-
-  <script>
-    // 初期化
-    const root = document.documentElement;
-    const stored = localStorage.getItem('theme');
-    if(stored === 'dark') root.setAttribute('data-theme','dark');
-
-    // 年表示
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    // ダークモード切替
-    document.getElementById('toggleTheme').addEventListener('click', ()=>{
-      if(root.getAttribute('data-theme') === 'dark'){
-        root.removeAttribute('data-theme');
-        localStorage.setItem('theme','light');
-      } else {
-        root.setAttribute('data-theme','dark');
-        localStorage.setItem('theme','dark');
-      }
-    });
-
-    // モーダル表示
-    const modal = document.getElementById('modal');
-    const modalContent = document.getElementById('modalContent');
-    document.querySelectorAll('.read').forEach(btn=>{
-      btn.addEventListener('click', (e)=>{
-        e.preventDefault();
-        const card = btn.closest('.card');
-        const full = card.querySelector('.full').innerHTML;
-        modalContent.innerHTML = full;
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden','false');
-        window.scrollTo({top:0,behavior:'smooth'});
-      });
-    });
-    document.getElementById('closeModal').addEventListener('click', ()=>{
-      modal.classList.remove('show');
-      modal.setAttribute('aria-hidden','true');
-    });
-    modal.addEventListener('click', (e)=>{
-      if(e.target === modal){
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden','true');
-      }
-    });
-
-    // 検索フィルター（タイトルと抜粋を参照）
-    const search = document.getElementById('search');
-    const posts = Array.from(document.querySelectorAll('.card'));
-    search.addEventListener('input', ()=>{
-      const q = search.value.trim().toLowerCase();
-      posts.forEach(p=>{
-        const title = p.dataset.title.toLowerCase();
-        const excerpt = p.querySelector('.excerpt').textContent.toLowerCase();
-        if(!q || title.includes(q) || excerpt.includes(q)){
-          p.style.display = '';
-        } else {
-          p.style.display = 'none';
-        }
-      });
-    });
-
-    // キーボード操作: Escでモーダル閉じる
-    document.addEventListener('keydown', (e)=>{
-      if(e.key === 'Escape' && modal.classList.contains('show')){
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden','true');
-      }
-    });
-  </script>
 </body>
 </html>
