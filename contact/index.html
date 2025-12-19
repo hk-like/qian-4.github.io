@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contact — Qian-4 GitHub Pages</title>
+  <meta name="description" content="Qian-4 GitHub Pages のお問い合わせページ。フォームまたはメールでご連絡ください。">
+  <link rel="canonical" href="https://qian-4.github.io/contact/">
+  <meta name="robots" content="index,follow">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Contact — Qian-4 GitHub Pages">
+  <meta property="og:description" content="Qian-4 GitHub Pages のお問い合わせページ。フォームまたはメールでご連絡ください。">
+  <meta property="og:url" content="https://qian-4.github.io/contact/">
+  <meta property="og:site_name" content="Qian-4 GitHub Pages">
+
+  <!-- 構造化データ（簡易） -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebPage",
+    "url":"https://qian-4.github.io/contact/",
+    "name":"Contact — Qian-4 GitHub Pages",
+    "mainEntity": {
+      "@type":"ContactPoint",
+      "contactType":"customer support",
+      "email":"info@example.com"
+    }
+  }
+  </script>
+
+  <!-- 内部CSS（外部ファイルなし） -->
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:#111;background:#fff;line-height:1.6}
+    header{background:#fafafa;border-bottom:1px solid #eee;padding:1rem}
+    nav a{margin-right:1rem;color:#333;text-decoration:none;font-weight:500}
+    nav a:hover{color:#0366d6}
+    main{max-width:900px;margin:2rem auto;padding:0 1rem}
+    h1{font-size:1.6rem;margin-bottom:.6rem}
+    p.lead{color:#555;margin-bottom:1rem}
+    form{background:#fff;border:1px solid #eee;padding:1rem;border-radius:6px;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+    .field{margin-bottom:0.9rem}
+    label{display:block;font-weight:600;margin-bottom:0.35rem;font-size:0.95rem}
+    input[type="text"],input[type="email"],textarea,select{
+      width:100%;padding:0.6rem;border:1px solid #dcdcdc;border-radius:6px;font-size:0.95rem;background:#fff;
+    }
+    textarea{min-height:140px;resize:vertical}
+    .row{display:flex;gap:0.8rem}
+    .row > .field{flex:1}
+    .note{font-size:0.88rem;color:#666;margin-bottom:0.8rem}
+    button[type="submit"]{
+      display:inline-block;padding:0.6rem 1rem;border-radius:6px;border:0;background:#0366d6;color:#fff;font-weight:600;cursor:pointer;
+    }
+    button[type="submit"]:active{transform:translateY(1px)}
+    .alt{margin-top:1rem;font-size:0.92rem;color:#444}
+    .robots-note{font-size:0.85rem;color:#888;margin-top:1rem}
+    footer{text-align:center;padding:1rem;background:#fafafa;border-top:1px solid #eee;margin-top:2rem;font-size:0.9rem;color:#555}
+    @media (max-width:600px){
+      .row{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/">ホーム</a>
+      <a href="/about/">About</a>
+      <a href="/contact/">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <article itemscope itemtype="https://schema.org/Article">
+      <h1 itemprop="headline">お問い合わせ</h1>
+      <p class="lead">質問・連絡・コラボのご相談はこちらから。フォーム送信後は指定のメールアドレスに届きます（外部サービスを利用）。</p>
+
+      <!-- フォーム説明 -->
+      <p class="note">注意：GitHub Pagesは静的ホスティングです。フォーム処理はサーバー側で行われないため、下記の <strong>action</strong> を外部のフォームサービス（例：Formspree）やフォーム受信用のエンドポイントに置き換えてください。テスト用のmailtoリンクも用意しましたが、信頼性は低いです。</p>
+
+      <!--
+        使用例:
+        ・Formspreeを使う場合: action="https://formspree.io/f/あなたのID" method="POST"
+        ・Google Forms埋め込みに切り替える（iframe）
+        ・Netlify Forms等のサービスを利用（ただし GitHub Pages と Netlify の組合せは別途ホスティングが必要）
+        ・メールリンクを置くだけなら <a href="mailto:you@example.com">you@example.com</a>
+      -->
+
+      <!-- フォーム（下のactionを必ず置き換えてください） -->
+      <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" aria-label="お問い合わせフォーム">
+        <div class="row">
+          <div class="field">
+            <label for="name">お名前 <span aria-hidden="true">（任意）</span></label>
+            <input id="name" name="name" type="text" placeholder="山田 太郎">
+          </div>
+          <div class="field">
+            <label for="email">メールアドレス <span aria-hidden="true">（必須）</span></label>
+            <input id="email" name="email" type="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="subject">件名</label>
+          <input id="subject" name="subject" type="text" placeholder="お問い合わせの件名">
+        </div>
+
+        <div class="field">
+          <label for="message">メッセージ <span style="color:#666;font-weight:400">（必須）</span></label>
+          <textarea id="message" name="message" placeholder="こちらにご用件をどうぞ…" required></textarea>
+        </div>
+
+        <!-- スパム対策の簡易例（任意） -->
+        <div class="field" style="display:none">
+          <label for="honeypot">Leave blank</label>
+          <input id="honeypot" name="_gotcha" type="text" autocomplete="off">
+        </div>
+
+        <button type="submit">送信</button>
+
+        <p class="alt">代替手段: <a href="mailto:info@example.com">info@example.com</a> にメールしてください（メールは自動分類されないので返信が遅れる可能性あり）。</p>
+        <p class="robots-note">送信先を設定したら、必ず実際に送って動作確認をしてください。</p>
+      </form>
+
+      <section style="margin-top:1.2rem">
+        <h2>よくある使い方</h2>
+        <ul>
+          <li>簡単に使いたい → Formspree 等の外部サービスにフォームを繋ぐ（無料プランあり）。</li>
+          <li>信頼性重視 → 自分でサーバーを用意して webhook を受けるか、Google Forms を埋め込む（iframe）。</li>
+          <li>とりあえず連絡先を載せるだけでOK → メールアドレスを記載しておく。</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer>
+    <p>&copy; <span id="year">2025</span> Qian-4 GitHub Pages</p>
+  </footer>
+
+  <script>
+    // 表示用に年だけ差し替え
+    document.getElementById('year').textContent = new Date().getFullYear();
+    // 注意: honeypot は送信前にJSで消すのではなく、非表示のままにしておく（スパム対策）
+  </script>
+</body>
+</html>
