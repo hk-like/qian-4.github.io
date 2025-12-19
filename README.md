@@ -1,37 +1,141 @@
-# Qian-4 GitHub Pages
+了解。
+じゃあ広東語（カントニーズ）を交えたバージョンにして、雰囲気をより香港らしく演出する。
+ナレーションや住民のセリフに広東語を入れて、漢字＋ローマ字読みを併記してみる。
 
-このリポジトリは [Qian-4 GitHub Pages](https://qian-4.github.io/) 用です。
+⸻
 
-## サイト構成
-qian-4.github.io/
-├─ index.html ← トップページ
-├─ about.html ← Aboutページ
-├─ contact.html ← Contactページ
-└─ images/ ← 画像フォルダ
-└─ sample.jpg
-## 画像追加方法
+九龍城砦
 
-1. images フォルダに画像を追加する。
-2. GitHub Web UI でアップロードする場合：
-   - 「Add file」→「Upload files」をクリック
-   - 画像ファイルを選択
-   - Commit changes
-3. HTML で表示する場合は <img src="/images/画像名.jpg" alt="説明"> を使用
+――救出作戦編「PROJECT REBIRTH（再生）」広東語バージョン
 
-## ページの編集
+1994年直前・非公式会合
 
-- 各 HTML ファイルを直接編集する
-- 外部CSSは使わず、すべて内部CSSで記述
-- JSON-LD構造化データを追加してSEO最適化
+会議室には、香港の紋章も議事録もない。
+壁には航空写真。
 
-## GitHub Pages
+司令官が低く言う。
 
-- このリポジトリを GitHub Pages で公開中
-- URL: [https://qian-4.github.io/](https://qian-4.github.io/)
+司令官
+「壊すか、放っておくか――
+　嗰兩個選擇就係唯一嘅選擇？
+　(Ga1 loeng5 go3 syun2 zaak6 zau6 hai6 wai6 jat1 ge3 syun2 zaak6?)」
 
----
+⸻
 
-### Tips
+作戦の発端
 
-- 画像フォルダを作るときは、空の状態では作れないので .gitkeep などのダミーファイルを入れると便利
-- 変更を加えたら Commit → Push して反映
+若い都市計画技師が模型を示す。
+
+技師
+「九龍城唔係‘失敗’，佢係‘無控制嘅實驗城市’
+　(Gau2 lung4 sing4 m4 hai6 ‘sat1 baai6’, keoi5 hai6 ‘mou4 hung3 zai3 ge3 sat6 jim6 sing4 si5’)」
+	•	高密度居住
+	•	自給商業
+	•	歩行者優先
+	•	自治秩序
+	•	犯罪率低
+
+技師
+「問題唔係存在，係安全
+　(Man6 tai4 m4 hai6 cyun4 zoi6, hai6 on1 cyun4)」
+
+⸻
+
+フェーズ1：定義の変更
+
+法務官が決定的な提案。
+
+法務官
+「將九龍城重新定義做‘特別城市實驗區’
+　(Zoeng1 Gau2 lung4 sing4 cung4 san1 ding6 ji6 zou6 ‘dak6 bit6 sing4 si5 sat6 jim6 keoi1’)」
+
+法律を適用するのではなく、
+法律の枠を作り直す。
+	•	建築基準の例外指定
+	•	住民自治の合法化
+	•	国家非管理区域として暫定承認
+
+⸻
+
+フェーズ2：安全改修
+
+消防士が図面を広げる。
+
+消防士
+「唔好拆，淨係切一啲危險嘅部分
+　(M4 hou2 caak3, zing6 hai6 cit3 jat1 di1 ngai4 him2 ge3 bou6 fan6)」
+	•	非常通路を貫通
+	•	危険増築のみ除去
+	•	水・電気を再配線
+	•	屋上を避難区画へ
+
+城砦は削られるが、消されない。
+
+⸻
+
+フェーズ3：住民が作戦員に
+
+司令官：
+
+「救一座城市，最重要嘅係
+　(Jau3 jat1 zo6 sing4 si5, zeoi3 zung6 jiu3 ge3 hai6)
+　居民自己保護佢」
+	•	消防班を住民で編成
+	•	建築監視を住民担当
+	•	商業組合を正式登録
+
+城砦は国家に管理されず、自分たちで管理される。
+
+⸻
+
+フェーズ4：世界に見せる
+
+メディア戦略：
+	•	建築学会
+	•	都市研究者
+	•	ドキュメンタリー監督
+
+見出し：
+
+「世界唯一，居民自理嘅垂直城市
+　(Sai3 gaai3 wai6 jat1, geoi1 man4 zi6 lei5 ge3 seoi6 zik6 sing4 si5)」
+
+⸻
+
+フェーズ5：決断の瞬間
+
+司令官が呟く。
+
+司令官
+「呢個唔係救，係共犯
+　(Ne1 go3 m4 hai6 gau3, hai6 gung6 faan6)」
+
+全員が頷く。
+
+⸻
+
+エピローグ：救われた城砦
+
+数年後、城砦はまだ混沌。完璧ではない。
+
+住民
+「呢度唔係貧民區，係未完成嘅未來
+　(Ne1 dou6 m4 hai6 pan4 man4 keoi1, hai6 mei6 jyun4 sing4 ge3 mei6 loi4)」
+
+子どもは屋上で走り、
+研究者が訪れ、
+住民は胸を張る。
+
+「我哋嘅城市，我哋自己保護」
+「Ngo5 dei6 ge3 sing4 si5, ngo5 dei6 zi6 gei2 bou2 wu6」
+
+九龍城砦は、
+壊されず、放置もされず、
+救われた街として生き続けた。
+
+⸻
+
+もし望むなら、
+さらに住民のセリフを広東語だけにして、屋上や通路のシーンをリアルに描写する拡張版も作れる。
+
+作る？
